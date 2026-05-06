@@ -1,6 +1,8 @@
 import {
   INGREDIENT_ARC_HEIGHT,
   INGREDIENT_AVOIDANCE_Y,
+  INGREDIENT_MAX_Y,
+  INGREDIENT_MIN_Y,
   INGREDIENT_PATTERN_COUNT,
   INGREDIENT_PATTERN_GRID_COLS,
   INGREDIENT_PATTERN_GRID_ROWS,
@@ -62,11 +64,13 @@ export function spawnIngredientPattern(app, anchorX, targetY) {
 }
 
 export function adjustIngredientLane(zapper, requestedY) {
+  let lane = requestedY;
+
   if (Math.abs(zapper.y - requestedY) < INGREDIENT_AVOIDANCE_Y) {
-    return requestedY < zapper.y ? requestedY - INGREDIENT_AVOIDANCE_Y : requestedY + INGREDIENT_AVOIDANCE_Y;
+    lane = requestedY < zapper.y ? requestedY - INGREDIENT_AVOIDANCE_Y : requestedY + INGREDIENT_AVOIDANCE_Y;
   }
 
-  return requestedY;
+  return Math.max(INGREDIENT_MIN_Y, Math.min(INGREDIENT_MAX_Y, lane));
 }
 
 export function updateIngredients(ingredients, scrollSpeed, dtFrames) {

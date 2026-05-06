@@ -39,6 +39,8 @@ Phase 1 — core flight + obstacles
 - Wired the first playable state machine and placeholder rendering pass.
 - Eased Phase 1 difficulty after first playtest feedback: slower speed curve, later first zapper, wider obstacle spacing, shorter early zappers, and stronger upward control.
 - Hardened camera startup for deployed environments like Vercel by moving to an explicit enable-camera action instead of auto-requesting on page load.
+- Tuned control and readability after more playtest feedback: reduced upward rocket effect, raised obstacle/ingredient lanes, and added a burner meter to the HUD.
+- After another round of feedback, reduced vertical burst again and moved the burner/fuel meter to a larger right-side HUD position.
 
 ## Files created / touched
 
@@ -85,6 +87,7 @@ Add playtest findings here:
 - Pinch responsiveness: pending
 - Thrust/gravity feel: pending
 - Obstacle fairness: first player feedback said the build was too difficult; eased the early game and obstacle cadence
+- Obstacle/ingredient placement: some patterns and hazards were sitting too close to the ground; raised their lane ranges
 - Hand-lost pause reliability: pending
 - FPS: pending
 - Confusing UI moments: pending
@@ -95,17 +98,17 @@ Track tuning changes here:
 
 | Value | Current | Notes |
 |---|---:|---|
-| GRAVITY | 0.40 | reduced fall speed to make recovery easier |
-| THRUST | -0.92 | stronger lift for easier vertical correction |
+| GRAVITY | 0.44 | firmer fall to further reduce floaty upward burst |
+| THRUST | -0.66 | reduced lift again after more playtest feedback |
 | TERMINAL_VELOCITY_DOWN | 8 | slightly softer drop speed |
-| TERMINAL_VELOCITY_UP | -7.5 | slightly stronger capped rise |
+| TERMINAL_VELOCITY_UP | -5.2 | much lower ceiling on upward burst speed |
 | PINCH_THRESHOLD | 45 | initial spec |
 | PINCH_HYSTERESIS | 12 | initial spec |
 | BASE_SCROLL_SPEED | 3.4 | lowered opening pace |
 | MAX_SCROLL_SPEED | 7.2 | softened top-end difficulty |
 | SPEED_RAMP_DISTANCE | 9000 | much slower speed ramp |
-| PLAYER_THRUST_RAMP_UP | 0.21 | more responsive burner pickup |
-| PLAYER_THRUST_RAMP_DOWN | 0.11 | keeps release arc smooth while staying controllable |
+| PLAYER_THRUST_RAMP_UP | 0.11 | softer burner pickup for finer altitude control |
+| PLAYER_THRUST_RAMP_DOWN | 0.09 | smoother burner decay after release |
 | ZAPPER_FIRST_SPAWN_DISTANCE | 760 | larger opening grace window |
 | ZAPPER_MIN_SPACING_EASY | 520 | easier early obstacle cadence |
 | ZAPPER_MAX_SPACING_EASY | 760 | easier early obstacle cadence |
@@ -114,3 +117,7 @@ Track tuning changes here:
 | ZAPPER_MIN_LENGTH_EASY | 140 | shorter early hazards |
 | ZAPPER_MAX_LENGTH_EASY | 210 | shorter early hazards |
 | ZAPPER_COLLISION_PAD | 6 | more forgiving hitbox |
+| ZAPPER_MIN_CENTER_Y | 130 | raised lower obstacle band |
+| ZAPPER_MAX_CENTER_Y | 430 | removed very low hazard placements |
+| INGREDIENT_MIN_Y | 150 | keeps ingredient lanes away from the floor |
+| INGREDIENT_MAX_Y | 510 | keeps ingredient lanes above the ground strip |

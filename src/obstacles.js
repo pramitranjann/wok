@@ -2,6 +2,9 @@ import {
   CANVAS_W,
   CEILING_Y,
   GROUND_Y,
+  INGREDIENT_LANE_OFFSET,
+  INGREDIENT_MAX_Y,
+  INGREDIENT_MIN_Y,
   OBSTACLE_DIFFICULTY_RAMP_DISTANCE,
   ZAPPER_ALLOWED_ANGLES,
   ZAPPER_COLLISION_PAD,
@@ -102,6 +105,6 @@ export function maybeSpawnZapper(app) {
 
 export function getSafeIngredientBand(zapper, direction) {
   const bias = direction > 0 ? -1 : 1;
-  const candidate = zapper.y + bias * 150;
-  return Math.max(CEILING_Y + 60, Math.min(GROUND_Y - 80, candidate));
+  const candidate = zapper.y + bias * INGREDIENT_LANE_OFFSET;
+  return Math.max(INGREDIENT_MIN_Y, Math.min(INGREDIENT_MAX_Y, candidate));
 }
