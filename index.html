@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>wok.</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <canvas id="game" width="1280" height="720" aria-label="wok. game canvas"></canvas>
+      <section id="boot-status" class="boot-status" aria-live="polite">
+        <h1>wok.</h1>
+        <p id="boot-message">Booting renderer...</p>
+      </section>
+      <button id="camera-retry" class="camera-retry hidden" type="button">Retry camera</button>
+    </main>
+    <script>
+      const bootStatus = document.getElementById("boot-status");
+      const bootMessage = document.getElementById("boot-message");
+
+      window.__setBootMessage = (message) => {
+        if (bootMessage) {
+          bootMessage.textContent = message;
+        }
+      };
+
+      window.__hideBootStatus = () => {
+        bootStatus?.classList.add("hidden");
+      };
+
+      window.addEventListener("error", (event) => {
+        window.__setBootMessage(`Startup error: ${event.message}`);
+      });
+
+      window.addEventListener("unhandledrejection", (event) => {
+        const reason = event.reason instanceof Error ? event.reason.message : String(event.reason);
+        window.__setBootMessage(`Startup error: ${reason}`);
+      });
+    </script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

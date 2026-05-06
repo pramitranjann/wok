@@ -1,0 +1,93 @@
+:root {
+  color-scheme: dark;
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
+  background: #07111e;
+  color: #fef3c7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at top, rgba(252, 211, 77, 0.08), transparent 32%),
+    linear-gradient(180deg, #0d1b2f 0%, #07111e 100%);
+}
+
+.app-shell {
+  position: relative;
+  width: min(100vw, 1280px);
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 2px solid rgba(255, 245, 210, 0.2);
+  border-radius: 20px;
+  background: #07111e;
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.boot-status {
+  position: absolute;
+  inset: 12px;
+  display: grid;
+  place-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 32px;
+  border-radius: 20px;
+  background: rgba(5, 10, 18, 0.78);
+  color: #fef3c7;
+  pointer-events: none;
+}
+
+.boot-status h1,
+.boot-status p {
+  margin: 0;
+}
+
+.boot-status h1 {
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  line-height: 0.95;
+}
+
+.boot-status p {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.boot-status.hidden {
+  display: none;
+}
+
+.camera-retry {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  padding: 14px 24px;
+  border: 0;
+  border-radius: 999px;
+  background: #f59e0b;
+  color: #131313;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+}
+
+.camera-retry.hidden {
+  display: none;
+}
