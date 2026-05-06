@@ -29,6 +29,8 @@ Phase 1 — core flight + obstacles
 - Deployment hardening added for remote hosting:
   - explicit user-triggered camera startup
   - clearer secure-context / permission / missing-camera error messages
+  - boot overlay now remains visible until camera startup succeeds
+  - clicking the boot overlay or canvas can also trigger camera startup
 
 ## Last completed work
 

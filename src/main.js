@@ -31,6 +31,7 @@ import { createWebcamVideo, normalizeCameraError, stopWebcamStream } from "./web
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const retryButton = document.getElementById("camera-retry");
+const bootStatus = document.getElementById("boot-status");
 const setBootMessage = globalThis.__setBootMessage ?? (() => {});
 const hideBootStatus = globalThis.__hideBootStatus ?? (() => {});
 
@@ -45,10 +46,21 @@ let previousTimeMs = 0;
 let cameraInitInFlight = false;
 
 retryButton.addEventListener("click", async () => {
-  if (cameraInitInFlight) {
+  await requestCameraStart();
+});
+
+bootStatus?.addEventListener("click", async () => {
+  if (app.camera.ready) {
     return;
   }
-  await initializeCameraAndVision();
+  await requestCameraStart();
+});
+
+canvas.addEventListener("click", async () => {
+  if (app.camera.ready || app.state !== GAME_STATES.LOADING) {
+    return;
+  }
+  await requestCameraStart();
 });
 
 window.addEventListener("beforeunload", () => {
@@ -63,6 +75,13 @@ function initialize() {
   setState(app, GAME_STATES.LOADING, "Enable camera to play.");
   setCameraButton("Enable camera", true);
   animationFrameId = requestAnimationFrame(tick);
+}
+
+async function requestCameraStart() {
+  if (cameraInitInFlight) {
+    return;
+  }
+  await initializeCameraAndVision();
 }
 
 async function initializeCameraAndVision() {
@@ -115,7 +134,9 @@ function tick(timestampMs) {
 
   app.debug.fps = updatePerfTracker(perf, dtMs);
   renderFrame(ctx, app, video);
-  hideBootStatus();
+  if (app.camera.ready) {
+    hideBootStatus();
+  }
   animationFrameId = requestAnimationFrame(tick);
 }
 
