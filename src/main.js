@@ -26,7 +26,7 @@ import { renderFrame } from "./render.js";
 import { createAppState, setState } from "./states.js";
 import { updateGestureInput } from "./gesture.js";
 import { createVisionController, detectHands } from "./vision.js";
-import { createWebcamVideo, stopWebcamStream } from "./webcam.js";
+import { createWebcamVideo, normalizeCameraError, stopWebcamStream } from "./webcam.js";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -42,9 +42,12 @@ let stream = null;
 let visionController = null;
 let animationFrameId = 0;
 let previousTimeMs = 0;
+let cameraInitInFlight = false;
 
 retryButton.addEventListener("click", async () => {
-  retryButton.classList.add("hidden");
+  if (cameraInitInFlight) {
+    return;
+  }
   await initializeCameraAndVision();
 });
 
@@ -56,16 +59,20 @@ window.addEventListener("beforeunload", () => {
 initialize();
 
 function initialize() {
-  setBootMessage("Starting renderer...");
+  setBootMessage("Enable camera to play.");
+  setState(app, GAME_STATES.LOADING, "Enable camera to play.");
+  setCameraButton("Enable camera", true);
   animationFrameId = requestAnimationFrame(tick);
-  void initializeCameraAndVision();
 }
 
 async function initializeCameraAndVision() {
+  cameraInitInFlight = true;
   app.camera.loading = true;
   app.camera.error = null;
   app.camera.ready = false;
   app.statusMessage = "Loading camera...";
+  retryButton.disabled = true;
+  setCameraButton("Starting camera...", true);
   setBootMessage("Loading camera...");
   setState(app, GAME_STATES.LOADING, "Loading camera...");
 
@@ -78,16 +85,24 @@ async function initializeCameraAndVision() {
     app.camera.ready = true;
     app.camera.loading = false;
     app.hand.lastSeenAt = performance.now();
-    retryButton.classList.add("hidden");
+    setCameraButton("Enable camera", false);
     setState(app, GAME_STATES.TITLE, "Pinch to start");
   } catch (error) {
     app.camera.loading = false;
     app.camera.ready = false;
-    app.camera.error = "Camera access needed to play.";
-    app.statusMessage = error instanceof Error ? error.message : "Camera access needed to play.";
+    app.camera.error = normalizeCameraError(error);
+    app.statusMessage = app.camera.error;
     setBootMessage(app.statusMessage);
-    retryButton.classList.remove("hidden");
+    setCameraButton("Retry camera", true);
+  } finally {
+    retryButton.disabled = false;
+    cameraInitInFlight = false;
   }
+}
+
+function setCameraButton(label, visible) {
+  retryButton.textContent = label;
+  retryButton.classList.toggle("hidden", !visible);
 }
 
 function tick(timestampMs) {

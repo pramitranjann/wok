@@ -88,6 +88,11 @@ canvas {
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
 }
 
+.camera-retry:disabled {
+  opacity: 0.75;
+  cursor: progress;
+}
+
 .camera-retry.hidden {
   display: none;
 }

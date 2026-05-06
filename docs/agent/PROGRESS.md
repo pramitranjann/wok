@@ -11,7 +11,7 @@ Phase 1 — core flight + obstacles
 - First playable Phase 1 scaffold now exists.
 - Browser app is static-host ready: `index.html`, `styles.css`, and modular ES modules under `src/`.
 - Core loop implemented:
-  - webcam boot + camera retry control
+  - webcam boot + explicit enable / retry camera control
   - MediaPipe Hand Landmarker setup via CDN bundle
   - pinch detection with hysteresis
   - required state chain through `RETRY_PROMPT`
@@ -26,6 +26,9 @@ Phase 1 — core flight + obstacles
   - results and retry loop
   - webcam panel with hand skeleton overlay
 - Not yet playtested end-to-end on an actual camera session.
+- Deployment hardening added for remote hosting:
+  - explicit user-triggered camera startup
+  - clearer secure-context / permission / missing-camera error messages
 
 ## Last completed work
 
@@ -33,6 +36,7 @@ Phase 1 — core flight + obstacles
 - Chose a mechanics-first module split aligned with the shared brief.
 - Wired the first playable state machine and placeholder rendering pass.
 - Eased Phase 1 difficulty after first playtest feedback: slower speed curve, later first zapper, wider obstacle spacing, shorter early zappers, and stronger upward control.
+- Hardened camera startup for deployed environments like Vercel by moving to an explicit enable-camera action instead of auto-requesting on page load.
 
 ## Files created / touched
 
