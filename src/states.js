@@ -3,6 +3,7 @@ import {
   GAME_STATES,
   GROUND_Y,
   PLAYER_H,
+  PLAYER_LIVES_MAX,
   PLAYER_START_X,
   PLAYER_START_Y,
   ZAPPER_FIRST_SPAWN_DISTANCE,
@@ -47,10 +48,10 @@ export function createAppState() {
       backgroundOffset: 0,
       groundOffset: 0,
       nextZapperDistance: ZAPPER_FIRST_SPAWN_DISTANCE,
-      nextPatternDirection: 1,
     },
     run: {
       ingredients: 0,
+      livesLeft: PLAYER_LIVES_MAX,
       bestDistance: 0,
       lastDistance: 0,
     },
@@ -68,6 +69,7 @@ export function createAppState() {
       deathMs: 0,
       deathMode: "none",
       hitFlashMs: 0,
+      invulnerableMs: 0,
     },
     hand: {
       lastSeenAt: 0,
@@ -78,6 +80,8 @@ export function createAppState() {
     ingredients: [],
     effects: {
       flashMs: 0,
+      bannerMs: 0,
+      bannerText: "",
     },
     results: {
       elapsedMs: 0,
@@ -121,6 +125,7 @@ export function resetRun(app) {
   app.obstacles.length = 0;
   app.ingredients.length = 0;
   app.run.ingredients = 0;
+  app.run.livesLeft = PLAYER_LIVES_MAX;
   app.player.x = PLAYER_START_X;
   app.player.y = PLAYER_START_Y;
   app.player.vy = 0;
@@ -134,7 +139,10 @@ export function resetRun(app) {
   app.player.deathMs = 0;
   app.player.deathMode = "none";
   app.player.hitFlashMs = 0;
+  app.player.invulnerableMs = 0;
   app.effects.flashMs = 0;
+  app.effects.bannerMs = 0;
+  app.effects.bannerText = "";
   app.hand.lostPause = false;
   app.hand.resumeVisibleMs = 0;
 }

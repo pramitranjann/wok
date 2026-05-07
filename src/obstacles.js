@@ -1,20 +1,18 @@
 import {
   CANVAS_W,
-  CEILING_Y,
-  GROUND_Y,
-  INGREDIENT_LANE_OFFSET,
-  INGREDIENT_MAX_Y,
-  INGREDIENT_MIN_Y,
   OBSTACLE_DIFFICULTY_RAMP_DISTANCE,
-  ZAPPER_ALLOWED_ANGLES,
   ZAPPER_COLLISION_PAD,
   ZAPPER_END_CAP_RADIUS,
-  ZAPPER_MAX_CENTER_Y,
+  ZAPPER_GATE_BOTTOM,
+  ZAPPER_GATE_SAFE_Y,
+  ZAPPER_GATE_TOP,
+  ZAPPER_LANE_LOW,
+  ZAPPER_LANE_MID,
+  ZAPPER_LANE_TOP,
   ZAPPER_MAX_LENGTH_EASY,
   ZAPPER_MAX_LENGTH_HARD,
   ZAPPER_MAX_SPACING_EASY,
   ZAPPER_MAX_SPACING_HARD,
-  ZAPPER_MIN_CENTER_Y,
   ZAPPER_MIN_LENGTH_EASY,
   ZAPPER_MIN_LENGTH_HARD,
   ZAPPER_MIN_SPACING_EASY,
@@ -38,16 +36,12 @@ function getDifficultyProgress(distance) {
   return Math.min(1, distance / OBSTACLE_DIFFICULTY_RAMP_DISTANCE);
 }
 
-export function createZapper(distance) {
-  const progress = getDifficultyProgress(distance);
-  const angleDeg = ZAPPER_ALLOWED_ANGLES[Math.floor(Math.random() * ZAPPER_ALLOWED_ANGLES.length)];
+function pickOne(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function createZapper(angleDeg, centerY, length, x) {
   const angle = degreesToRadians(angleDeg);
-  const length = randomBetween(
-    lerp(ZAPPER_MIN_LENGTH_EASY, ZAPPER_MIN_LENGTH_HARD, progress),
-    lerp(ZAPPER_MAX_LENGTH_EASY, ZAPPER_MAX_LENGTH_HARD, progress),
-  );
-  const y = randomBetween(ZAPPER_MIN_CENTER_Y, ZAPPER_MAX_CENTER_Y);
-  const x = CANVAS_W + length;
   const dx = Math.cos(angle) * length;
   const dy = Math.sin(angle) * length;
 
@@ -56,7 +50,7 @@ export function createZapper(distance) {
 
   return {
     x,
-    y,
+    y: centerY,
     angle,
     angleDeg,
     length,
@@ -66,11 +60,68 @@ export function createZapper(distance) {
     endCapRadius: ZAPPER_END_CAP_RADIUS,
     aabb: {
       x: x - halfWidth,
-      y: y - halfHeight,
+      y: centerY - halfHeight,
       w: halfWidth * 2,
       h: halfHeight * 2,
     },
   };
+}
+
+function createFormation(distance) {
+  const progress = getDifficultyProgress(distance);
+  const length = randomBetween(
+    lerp(ZAPPER_MIN_LENGTH_EASY, ZAPPER_MIN_LENGTH_HARD, progress),
+    lerp(ZAPPER_MAX_LENGTH_EASY, ZAPPER_MAX_LENGTH_HARD, progress),
+  );
+  const x = CANVAS_W + length + 60;
+
+  const easyFormations = [
+    () => ({
+      zappers: [createZapper(0, ZAPPER_LANE_TOP, length, x)],
+      safeLaneY: ZAPPER_LANE_LOW,
+    }),
+    () => ({
+      zappers: [createZapper(0, ZAPPER_LANE_LOW, length, x)],
+      safeLaneY: ZAPPER_LANE_TOP,
+    }),
+    () => ({
+      zappers: [createZapper(90, 220, length * 0.86, x)],
+      safeLaneY: ZAPPER_LANE_LOW,
+    }),
+    () => ({
+      zappers: [createZapper(90, 380, length * 0.86, x)],
+      safeLaneY: ZAPPER_LANE_TOP,
+    }),
+    () => ({
+      zappers: [
+        createZapper(0, ZAPPER_GATE_TOP, length * 0.9, x),
+        createZapper(0, ZAPPER_GATE_BOTTOM, length * 0.9, x),
+      ],
+      safeLaneY: ZAPPER_GATE_SAFE_Y,
+    }),
+  ];
+
+  const advancedFormations = [
+    () => ({
+      zappers: [createZapper(45, 220, length, x)],
+      safeLaneY: ZAPPER_LANE_LOW,
+    }),
+    () => ({
+      zappers: [createZapper(135, 380, length, x)],
+      safeLaneY: ZAPPER_LANE_TOP,
+    }),
+    () => ({
+      zappers: [
+        createZapper(0, ZAPPER_GATE_TOP + 20, length * 0.92, x),
+        createZapper(0, ZAPPER_GATE_BOTTOM - 20, length * 0.92, x),
+      ],
+      safeLaneY: ZAPPER_GATE_SAFE_Y,
+    }),
+  ];
+
+  const formationFactory =
+    progress < 0.6 ? pickOne(easyFormations) : pickOne([...easyFormations, ...advancedFormations]);
+  return formationFactory();
 }
 
 export function updateZappers(zappers, scrollSpeed, dtFrames) {
@@ -94,17 +145,11 @@ export function maybeSpawnZapper(app) {
   }
 
   const progress = getDifficultyProgress(app.world.distance);
-  const zapper = createZapper(app.world.distance);
+  const formation = createFormation(app.world.distance);
   app.world.nextZapperDistance += randomBetween(
     lerp(ZAPPER_MIN_SPACING_EASY, ZAPPER_MIN_SPACING_HARD, progress),
     lerp(ZAPPER_MAX_SPACING_EASY, ZAPPER_MAX_SPACING_HARD, progress),
   );
-  app.obstacles.push(zapper);
-  return zapper;
-}
-
-export function getSafeIngredientBand(zapper, direction) {
-  const bias = direction > 0 ? -1 : 1;
-  const candidate = zapper.y + bias * INGREDIENT_LANE_OFFSET;
-  return Math.max(INGREDIENT_MIN_Y, Math.min(INGREDIENT_MAX_Y, candidate));
+  app.obstacles.push(...formation.zappers);
+  return formation;
 }

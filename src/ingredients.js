@@ -23,26 +23,30 @@ function createIngredient(x, y) {
 }
 
 export function spawnIngredientPattern(app, anchorX, targetY) {
-  const pattern = PATTERNS[Math.floor(Math.random() * PATTERNS.length)];
+  const progress = Math.min(1, app.world.distance / 5000);
+  const patternPool =
+    progress < 0.35 ? ["line", "arc", "line"] : progress < 0.7 ? ["line", "arc", "zigzag"] : PATTERNS;
+  const pattern = patternPool[Math.floor(Math.random() * patternPool.length)];
   const items = [];
+  const laneY = Math.max(INGREDIENT_MIN_Y + 20, Math.min(INGREDIENT_MAX_Y - 20, targetY));
 
   if (pattern === "line") {
     for (let index = 0; index < INGREDIENT_PATTERN_COUNT; index += 1) {
-      items.push(createIngredient(anchorX + index * INGREDIENT_PATTERN_SPACING, targetY));
+      items.push(createIngredient(anchorX + index * INGREDIENT_PATTERN_SPACING, laneY));
     }
   }
 
   if (pattern === "arc") {
     for (let index = 0; index < INGREDIENT_PATTERN_COUNT; index += 1) {
       const normalized = index / (INGREDIENT_PATTERN_COUNT - 1);
-      const y = targetY - Math.sin(normalized * Math.PI) * INGREDIENT_ARC_HEIGHT;
+      const y = laneY - Math.sin(normalized * Math.PI) * INGREDIENT_ARC_HEIGHT;
       items.push(createIngredient(anchorX + index * INGREDIENT_PATTERN_SPACING, y));
     }
   }
 
   if (pattern === "zigzag") {
     for (let index = 0; index < INGREDIENT_PATTERN_COUNT; index += 1) {
-      const y = targetY + (index % 2 === 0 ? -INGREDIENT_ZIGZAG_STEP : INGREDIENT_ZIGZAG_STEP);
+      const y = laneY + (index % 2 === 0 ? -INGREDIENT_ZIGZAG_STEP : INGREDIENT_ZIGZAG_STEP);
       items.push(createIngredient(anchorX + index * INGREDIENT_PATTERN_SPACING, y));
     }
   }
@@ -53,7 +57,7 @@ export function spawnIngredientPattern(app, anchorX, targetY) {
         items.push(
           createIngredient(
             anchorX + col * INGREDIENT_PATTERN_SPACING,
-            targetY + (row - 0.5) * INGREDIENT_ZIGZAG_STEP,
+            laneY + (row - 0.5) * INGREDIENT_ZIGZAG_STEP,
           ),
         );
       }

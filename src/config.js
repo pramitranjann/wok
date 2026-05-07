@@ -10,9 +10,9 @@ export const CAMERA_CONSTRAINTS = {
   audio: false,
   video: {
     facingMode: "user",
-    width: { ideal: 1280 },
-    height: { ideal: 720 },
-    frameRate: { ideal: 30, max: 60 },
+    width: { ideal: 960 },
+    height: { ideal: 540 },
+    frameRate: { ideal: 30, max: 30 },
   },
 };
 

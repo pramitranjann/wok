@@ -12,16 +12,19 @@ import {
   GRAVITY,
   HAND_LOST_THRESHOLD_MS,
   MAX_SCROLL_SPEED,
+  PLAYER_HIT_FLASH_MS,
+  PLAYER_RESPAWN_BANNER_MS,
+  PLAYER_RESPAWN_INVULNERABLE_MS,
   RESULTS_PINCH_DELAY_MS,
   SPEED_RAMP_DISTANCE,
   TITLE_PINCH_HOLD_MS,
 } from "./constants.js";
 import { collectIngredients, makePlayerHitbox, rectsOverlap } from "./collision.js";
-import { adjustIngredientLane, spawnIngredientPattern, updateIngredients } from "./ingredients.js";
+import { spawnIngredientPattern, updateIngredients } from "./ingredients.js";
 import { updateFlight } from "./physics.js";
 import { createPerfTracker, updatePerfTracker } from "./perf.js";
 import { startDeathSequence, updateDeathSequence } from "./player.js";
-import { maybeSpawnZapper, updateZappers, getSafeIngredientBand } from "./obstacles.js";
+import { maybeSpawnZapper, updateZappers } from "./obstacles.js";
 import { renderFrame } from "./render.js";
 import { createAppState, setState } from "./states.js";
 import { updateGestureInput } from "./gesture.js";
@@ -264,6 +267,10 @@ function updateCountdown(dtMs) {
 }
 
 function updatePlay(timestampMs, dtMs, dtFrames) {
+  if (!Number.isFinite(app.run.livesLeft)) {
+    app.run.livesLeft = 3;
+  }
+
   const handLostForMs = timestampMs - app.hand.lastSeenAt;
 
   if (handLostForMs > HAND_LOST_THRESHOLD_MS) {
@@ -284,6 +291,13 @@ function updatePlay(timestampMs, dtMs, dtFrames) {
     return;
   }
 
+  app.player.invulnerableMs = Math.max(0, app.player.invulnerableMs - dtMs);
+  app.player.hitFlashMs = Math.max(0, app.player.hitFlashMs - dtMs);
+  app.effects.bannerMs = Math.max(0, app.effects.bannerMs - dtMs);
+  if (app.effects.bannerMs === 0) {
+    app.effects.bannerText = "";
+  }
+
   app.world.playTimeMs += dtMs;
   app.world.firstRunHint =
     app.world.playTimeMs >= FIRST_RUN_HINT_DELAY_MS && app.input.activeMs === 0 && app.world.distance < 160;
@@ -294,14 +308,11 @@ function updatePlay(timestampMs, dtMs, dtFrames) {
   app.world.distance += app.world.scrollSpeed * dtFrames;
   app.world.meters = Math.floor(app.world.distance * DISTANCE_SCALE);
 
-  const newZapper = maybeSpawnZapper(app);
-  if (newZapper) {
-    const lane = adjustIngredientLane(
-      newZapper,
-      getSafeIngredientBand(newZapper, app.world.nextPatternDirection),
-    );
-    spawnIngredientPattern(app, newZapper.x - 80, lane);
-    app.world.nextPatternDirection *= -1;
+  const newFormation = maybeSpawnZapper(app);
+  if (newFormation) {
+    const lane = newFormation.safeLaneY;
+    const anchorX = Math.min(...newFormation.zappers.map((zapper) => zapper.x)) - 140;
+    spawnIngredientPattern(app, anchorX, lane);
   }
 
   app.obstacles = updateZappers(app.obstacles, app.world.scrollSpeed, dtFrames);
@@ -312,10 +323,31 @@ function updatePlay(timestampMs, dtMs, dtFrames) {
   app.run.ingredients += collected;
 
   for (const zapper of app.obstacles) {
-    if (rectsOverlap(playerBox, zapper.aabb)) {
-      startDeathSequence(app.player);
-      setState(app, GAME_STATES.DEAD, "Dead");
+    if (app.player.invulnerableMs === 0 && rectsOverlap(playerBox, zapper.aabb)) {
+      handleHazardHit(zapper);
       break;
     }
   }
+}
+
+function handleHazardHit(hitZapper) {
+  const currentLives = Number.isFinite(app.run.livesLeft) ? app.run.livesLeft : 3;
+  app.run.livesLeft = currentLives - 1;
+
+  if (app.run.livesLeft <= 0) {
+    startDeathSequence(app.player);
+    setState(app, GAME_STATES.DEAD, "Dead");
+    return;
+  }
+
+  app.player.vy *= 0.45;
+  app.player.thrustBlend *= 0.55;
+  app.player.deathMs = 0;
+  app.player.deathMode = "none";
+  app.player.hitFlashMs = PLAYER_HIT_FLASH_MS;
+  app.player.invulnerableMs = PLAYER_RESPAWN_INVULNERABLE_MS;
+
+  app.obstacles = app.obstacles.filter((zapper) => zapper !== hitZapper);
+  app.effects.bannerText = `${app.run.livesLeft} ${app.run.livesLeft === 1 ? "life" : "lives"} left`;
+  app.effects.bannerMs = PLAYER_RESPAWN_BANNER_MS;
 }

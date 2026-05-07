@@ -1,3 +1,4 @@
+import { VISION_SAMPLE_MS } from "./constants.js";
 import { HAND_LANDMARKER_OPTIONS, MEDIAPIPE_MODEL_URL, MEDIAPIPE_WASM_URL } from "./config.js";
 
 export async function createVisionController() {
@@ -16,6 +17,7 @@ export async function createVisionController() {
   return {
     handLandmarker,
     lastVideoTime: -1,
+    lastDetectMs: -Infinity,
   };
 }
 
@@ -28,6 +30,11 @@ export function detectHands(controller, video, timestampMs) {
     return undefined;
   }
 
+  if (timestampMs - controller.lastDetectMs < VISION_SAMPLE_MS) {
+    return undefined;
+  }
+
   controller.lastVideoTime = video.currentTime;
+  controller.lastDetectMs = timestampMs;
   return controller.handLandmarker.detectForVideo(video, timestampMs);
 }

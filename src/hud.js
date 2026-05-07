@@ -1,11 +1,4 @@
-import {
-  CANVAS_W,
-  HUD_BURNER_H,
-  HUD_BURNER_W,
-  HUD_CAPSULE_H,
-  HUD_CAPSULE_W,
-  HUD_PADDING,
-} from "./constants.js";
+import { HUD_CAPSULE_H, HUD_CAPSULE_W, HUD_PADDING } from "./constants.js";
 
 export function drawHud(ctx, app) {
   ctx.save();
@@ -15,7 +8,7 @@ export function drawHud(ctx, app) {
   drawCapsule(ctx, HUD_PADDING, HUD_PADDING, `DIST ${String(app.world.meters).padStart(4, "0")}m`);
   drawCapsule(ctx, HUD_PADDING, HUD_PADDING + 54, `ING ${String(app.run.ingredients).padStart(2, "0")}`);
   drawCapsule(ctx, HUD_PADDING, HUD_PADDING + 108, `FPS ${String(app.debug.fps).padStart(2, "0")}`);
-  drawBurnerMeter(ctx, app, CANVAS_W - HUD_BURNER_W - HUD_PADDING, HUD_PADDING);
+  drawLivesCapsule(ctx, app, HUD_PADDING, HUD_PADDING + 162);
 
   if (app.state === "PLAY" && app.world.firstRunHint) {
     drawHint(ctx, "Pinch to fly ↑");
@@ -35,35 +28,52 @@ function drawCapsule(ctx, x, y, label) {
   ctx.fillText(label, x + 16, y + 9);
 }
 
-function drawBurnerMeter(ctx, app, x, y) {
-  ctx.fillStyle = "rgba(6, 14, 22, 0.82)";
-  ctx.strokeStyle = "rgba(249, 115, 22, 0.35)";
-  ctx.lineWidth = 2;
-  roundRect(ctx, x, y, HUD_BURNER_W, HUD_BURNER_H, 16);
+function drawLivesCapsule(ctx, app, x, y) {
+  const lives = Number.isFinite(app.run.livesLeft) ? app.run.livesLeft : 3;
+  const isRecovering = app.effects.bannerMs > 0;
+  const pulse = isRecovering ? 0.4 + 0.6 * Math.sin(app.effects.bannerMs * 0.02) ** 2 : 0;
+
+  ctx.fillStyle = isRecovering ? `rgba(127, 29, 29, ${0.56 + pulse * 0.14})` : "rgba(6, 14, 22, 0.8)";
+  ctx.strokeStyle = isRecovering
+    ? `rgba(248, 113, 113, ${0.42 + pulse * 0.4})`
+    : "rgba(254, 240, 138, 0.24)";
+  ctx.lineWidth = isRecovering ? 3 : 2;
+  roundRect(ctx, x, y, HUD_CAPSULE_W, HUD_CAPSULE_H, 14);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = "#fef3c7";
-  ctx.font = "700 20px Trebuchet MS";
-  ctx.fillText("FUEL FLOW", x + 18, y + 12);
+  ctx.fillText("LIVES", x + 16, y + 9);
 
-  const trackX = x + 18;
-  const trackY = y + 40;
-  const trackW = HUD_BURNER_W - 36;
-  const trackH = 16;
-  const fillW = Math.max(0, Math.min(trackW, trackW * app.player.thrustBlend));
+  const pipRadius = 8;
+  const pipGap = 24;
+  const pipsStartX = x + 116;
+  const pipY = y + 20;
 
-  ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-  roundRect(ctx, trackX, trackY, trackW, trackH, 999);
-  ctx.fill();
+  for (let index = 0; index < 3; index += 1) {
+    const pipX = pipsStartX + index * pipGap;
+    const active = index < lives;
+    ctx.beginPath();
+    ctx.arc(pipX, pipY, pipRadius, 0, Math.PI * 2);
+    ctx.fillStyle = active
+      ? isRecovering
+        ? `rgba(248, 113, 113, ${0.78 + pulse * 0.18})`
+        : "#f97316"
+      : "rgba(255, 255, 255, 0.14)";
+    ctx.fill();
+    if (active) {
+      ctx.strokeStyle = "rgba(255, 237, 213, 0.84)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
 
-  ctx.fillStyle = app.player.thrustBlend > 0.02 ? "#f97316" : "rgba(148, 163, 184, 0.3)";
-  roundRect(ctx, trackX, trackY, fillW, trackH, 999);
-  ctx.fill();
-
-  ctx.fillStyle = "#fed7aa";
-  ctx.font = "700 16px Trebuchet MS";
-  ctx.fillText(app.input.pinching ? "LIVE" : "IDLE", x + HUD_BURNER_W - 64, y + 12);
+  if (isRecovering) {
+    ctx.fillStyle = "rgba(254, 202, 202, 0.92)";
+    ctx.font = "700 11px Trebuchet MS";
+    ctx.fillText("-1", x + 154, y + 7);
+    ctx.font = "700 22px Trebuchet MS";
+  }
 }
 
 function drawHint(ctx, label) {

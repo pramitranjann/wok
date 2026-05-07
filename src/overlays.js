@@ -20,9 +20,6 @@ export function drawOverlay(ctx, app) {
   }
 
   switch (app.state) {
-    case GAME_STATES.LOADING:
-      drawCenteredPanel(ctx, "wok.", app.camera.error ?? app.statusMessage);
-      break;
     case GAME_STATES.TITLE:
       drawSidePanel(ctx, "wok.", "Pinch to start");
       break;
@@ -129,7 +126,7 @@ function drawDead(ctx) {
   ctx.textAlign = "center";
   ctx.fillStyle = "rgba(255, 255, 255, 0.86)";
   ctx.font = "700 46px Trebuchet MS";
-  ctx.fillText("Burner wiped out", CANVAS_W / 2, 132);
+  ctx.fillText("Clipped a hazard", CANVAS_W / 2, 132);
   ctx.restore();
 }
 

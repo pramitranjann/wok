@@ -11,10 +11,10 @@ export function rectsOverlap(a, b) {
 
 export function makePlayerHitbox(player) {
   return {
-    x: player.x + 6,
-    y: player.y + 6,
-    w: 36,
-    h: 52,
+    x: player.x + 10,
+    y: player.y + 12,
+    w: 28,
+    h: 40,
   };
 }
 
